@@ -41,7 +41,7 @@ newTalent{
 	end,
 	info = function(self, t)
 		local daminc = t.getIncrease(self, t)
-		return ([[When you throw your alchemist bombs, you infuse them with explosive acid that can blind.
+		return ([[When you throw your alchemist bombs, you infuse them with explosive acid that can disarm.
 		In addition all acid damage you do is increased by %d%%.
 		You cannot have more than one alchemist infusion sustain active at once.]]):
 		format(daminc)
@@ -87,8 +87,17 @@ newTalent{
 	end,
 	getDamage = function(self, t) return self:combatTalentSpellDamage(t, 7, 60) end,
 	getDuration = function(self, t) return math.floor(self:combatTalentScale(t, 6, 10)) end,
-	getSlow = function(self, t) return self:combatTalentLimit(t, 100, 10, 40) end,
+	getCorrodeDur = function(self, t) return math.floor(self:combatTalentScale(t, 2.3, 3.8)) end,
+	getAtk = function(self, t) return self:combatTalentMindDamage(t, 2, 20) end,
+	getArmor = function(self, t) return self:combatTalentMindDamage(t, 2, 20) end,
+	getDefense = function(self, t) return self:combatTalentMindDamage(t, 2, 20) end,
 	action = function(self, t)
+		local duration = t.getDuration(self, t)
+		local cordur = t.getCorrodeDur(self, t)
+		local atk = t.getAtk(self, t)
+		local armor = t.getArmor(self, t)
+		local defense = t.getDefense(self, t)
+
 		local tg = self:getTalentTarget(t)
 		local x, y = self:getTarget(tg)
 		if not x or not y then return nil end
@@ -96,7 +105,7 @@ newTalent{
 		-- Add a lasting map effect
 		game.level.map:addEffect(self,
 			x, y, t.getDuration(self, t),
-			DamageType.CAUSTIC_MIRE, {dam=self:spellCrit(t.getDamage(self, t)), dur=2, slow=t.getSlow(self, t)},
+			DamageType.ACID_CORRODE, {dam=self:spellCrit(t.getDamage(self, t)), dur=cordur, atk=atk, armor=armor, defense=defense},
 			self:getTalentRadius(t),
 			5, nil,
 			{zdepth=6, type="mucus"},
@@ -108,13 +117,13 @@ newTalent{
 	end,
 	info = function(self, t)
 		local damage = t.getDamage(self, t)
-		local slow = t.getSlow(self, t)
+		local cordur = t.getCorrodeDur(self, t)
 		local duration = t.getDuration(self, t)
 		local radius = self:getTalentRadius(t)
 		return ([[A radius %d pool of acid spawns at the target location, doing %0.1f Acid damage each turn for %d turns.
-		All creatures caught in the mire will also suffer a %d%% slowness effect.
+		All creatures caught in the mire will be corroded by the acid, reducing their accuracy, armor, and defense for %d turns.
 		The damage will increase with your Spellpower.]]):
-		format(radius, damDesc(self, DamageType.ACID, damage), duration, slow)
+		format(radius, damDesc(self, DamageType.ACID, damage), duration, cordur)
 	end,
 }
 

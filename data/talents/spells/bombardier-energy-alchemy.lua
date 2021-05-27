@@ -113,7 +113,8 @@ newTalent{
 			DamageType:get(DamageType.PHYSICAL).projector(self, px, py, DamageType.PHYSICAL, dam)
 			DamageType:get(DamageType.LIGHTNING).projector(self, px, py, DamageType.LIGHTNING, dam)
 			if actor:canBe("disarm") then
- 				actor:setEffect(actor.EFF_DISARMED, t.getDuration(self, t), {src=self, apply_power=self:combatSpellpower()})
+				actor:setEffect(actor.EFF_DAZED, t.getDuration(self, t), {apply_power=self:combatSpellpower()})
+
  			end
  			if actor:canBe("knockback") then
   				actor:knockback(self.x, self.y, 3)
@@ -127,7 +128,7 @@ newTalent{
 	info = function(self, t)
 		local radius = self:getTalentRadius(t)
 		return ([[By crushing an alchemist gem you generate a thunderclap in a cone of radius %d dealing %0.2f physical damage and %0.2f lightning damage.
-		All creatures caught inside are knocked back and disarmed for %d turns.
+		All creatures caught inside are knocked back and dazed for %d turns.
 		The duration and damage will increase with your Spellpower.]]):format(radius, damDesc(self, DamageType.PHYSICAL, t.getDamage(self, t)), damDesc(self, DamageType.LIGHTNING, t.getDamage(self, t)), t.getDuration(self, t))
 	end,
 }

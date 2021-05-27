@@ -41,7 +41,7 @@ newTalent{
 	end,
 	info = function(self, t)
 		local daminc = t.getIncrease(self, t)
-		return ([[When you throw your alchemist bombs, you infuse them with flames that burn for a few turns.
+		return ([[When you throw your alchemist bombs, you infuse them with flames that burn for a few turns and has a chance to add an additional burn that stuns as well.
 		In addition all fire damage you do is increased by %d%%.
 		You cannot have more than one alchemist infusion sustain active at once.]]):
 		format(daminc)

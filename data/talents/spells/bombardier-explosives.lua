@@ -1,25 +1,6 @@
--- ToME - Tales of Maj'Eyal
--- Copyright (C) 2009 - 2019 Nicolas Casalini
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation, either version 3 of the License, or
--- (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
---
--- You should have received a copy of the GNU General Public License
--- along with this program.  If not, see <http://www.gnu.org/licenses/>.
---
--- Nicolas Casalini "DarkGod"
--- darkgod@te4.org
-
 newTalent{
 	name = "Throw Bomb", short_name = "BOMBARDIER_THROW_BOMB",
-	type = {"spell/bombardier-explosives", 1},
+	type = {"spell/bombardier-explosives",1},
 	require = spells_req1,
 	points = 5,
 	mana = 5,
@@ -45,13 +26,14 @@ newTalent{
 		local inc_dam = 0
 		local damtype = DamageType.PHYSICAL
 		local particle = "ball_physical"
-		if self:isTalentActive(self.T_BOMBARDIER_ACID_INFUSION) then damtype = DamageType.ACID_BLIND; particle = "ball_acid"
+		if self:isTalentActive(self.T_BOMBARDIER_ACID_INFUSION) then damtype = DamageType.ACID_DISARM; particle = "ball_acid"
 		elseif self:isTalentActive(self.T_BOMBARDIER_LIGHTNING_INFUSION) then damtype = DamageType.LIGHTNING_DAZE; particle = "ball_lightning_beam"
-		elseif self:isTalentActive(self.T_BOMBARDIER_FROST_INFUSION) then damtype = DamageType.ICE; particle = "ball_ice"
-		elseif self:isTalentActive(self.T_BOMBARDIER_FIRE_INFUSION) then damtype = DamageType.FIREBURN; particle = "fireflash"
+		elseif self:isTalentActive(self.T_BOMBARDIER_FROST_INFUSION) then damtype = DamageType.ICE_SLOW; particle = "ball_ice"
+		elseif self:isTalentActive(self.T_BOMBARDIER_FIRE_INFUSION) then damtype = DamageType.FIRE_STUN; particle = "fireflash"
 		end
 		inc_dam = inc_dam + (ammo.alchemist_bomb and ammo.alchemist_bomb.power or 0) / 100
-		local dam = self:combatTalentSpellDamage(t, 15, 150, ((ammo.alchemist_power or 0) + self:combatSpellpower()) / 2)
+		--local dam = self:combatTalentSpellDamage(t, 15, 150, ((ammo.alchemist_power or 0) + self:combatSpellpower()) / 2)
+		local dam = self:combatTalentSpellDamage(t, 20, 200, ((ammo.alchemist_power or 0) + self:combatSpellpower()) / 2)
 		dam = dam * (1 + inc_dam)
 		return dam, damtype, particle
 	end,
@@ -66,7 +48,7 @@ newTalent{
 		local tg = self:getTalentTarget(t)
 		local x, y = self:getTarget(tg)
 		if not x or not y then return nil end
-		
+
 		self:attr("no_sound", 1)
 		ammo = self:removeObject(self:getInven("QUIVER"), 1)
 		self:attr("no_sound", -1)
@@ -150,8 +132,8 @@ newTalent{
 		local dam, damtype = 1, DamageType.FIRE
 		if ammo then dam, damtype = t.computeDamage(self, t, ammo) end
 		dam = damDesc(self, damtype, dam)
-		return ([[Imbue an alchemist gem with an explosive charge of mana and throw it.
-		The gem will explode for %0.1f %s damage to enemies (you and allies are immune).
+		return ([[Imbue an alchemist gem with an explosive charge of mana and throw it. You magically control the explosion so that it doesn't affect you or your allies.
+		Without an alchemist infusion altering it, the gem will explode for %0.1f %s physical damage to enemies.
 		Each kind of gem will also provide a specific effect.
 		The damage will improve with better gems and with your Spellpower.]]):format(dam, DamageType:get(damtype).name)
 	end,
@@ -159,7 +141,7 @@ newTalent{
 
 newTalent{
 	name = "Concussive Blast", short_name = "BOMBARDIER_CONCUSSIVE_BLAST",
-	type = {"spell/bombardier-explosives", 2},
+	type = {"spell/bombardier-explosives",2},
 	require = spells_req2,
 	mode = "passive",
 	points = 5,
@@ -179,7 +161,7 @@ newTalent{
 
 newTalent{
 	name = "Explosion Expert", short_name = "BOMBARDIER_EXPLOSION_EXPERT",
-	type = {"spell/bombardier-explosives", 3},
+	type = {"spell/bombardier-explosives",3},
 	require = spells_req3,
 	mode = "passive",
 	points = 5,
