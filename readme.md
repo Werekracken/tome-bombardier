@@ -13,7 +13,7 @@ This addon for [Tales of Maj'Eyal](https://te4.org/) adds a new Bombardier class
 
 [Download](https://te4.org/games/addons/tome/bombardier)
 
-[Forum](https://forums.te4.org/)
+[Forum](https://forums.te4.org/viewtopic.php?f=50&t=53176)
 
 - No golem.
 - Bombs never hurt self or allies.
