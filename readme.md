@@ -1,14 +1,19 @@
-long_name = "Class: Bombardier"
-short_name = "bombardier"
-for_module = "tome"
-version = {1,7,4}
-addon_version = {1,0,0}
-weight = 2000
-author = {"werekracken"}
-tags = {"bombardier", "Bombardier", "alchemist", "Alchemist", "class", "Class"}
-homepage = "https://te4.org/user/102798/addons"
-description = [[
-A new Bombardier class which is a variant of the Alchemist. Bombardiers forgo using a golem in order to focus more on the effects of their bombs and their own combat viability.
+# Bombardier
+
+- [Bombardier](#bombardier)
+  - [Generic talents](#generic-talents)
+  - [Class talents](#class-talents)
+  - [Changelog](#changelog)
+
+---
+
+This addon for [Tales of Maj'Eyal](https://te4.org/) adds a new Bombardier class which is a variant of the Alchemist. Bombardiers forgo using a golem in order to focus more on the effects of their bombs and their own combat viability.
+
+[Github](https://github.com/Werekracken/tome-bombardier)
+
+[Download](https://te4.org/games/addons/tome/bombardier)
+
+[Forum](https://forums.te4.org/)
 
 - No golem.
 - Bombs never hurt self or allies.
@@ -41,14 +46,3 @@ A new Bombardier class which is a variant of the Alchemist. Bombardiers forgo us
 
 v1.0.0
 Initial release
-
-]]
-overload = true
-superload = false
-hooks = true
-data = true
-
-
-
-
-
