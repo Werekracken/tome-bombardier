@@ -16,11 +16,10 @@
 --
 -- Nicolas Casalini "DarkGod"
 -- darkgod@te4.org
-local Object = require "engine.Object"
 
 newTalent{
 	name = "Acid Infusion", short_name = "BOMBARDIER_ACID_INFUSION",
-	type = {"spell/bombardier-acid-alchemy", 1},
+	type = {"spell/bombardier-caustic-alchemy", 1},
 	mode = "sustained",
 	require = spells_req1,
 	sustain_mana = 5,
@@ -36,12 +35,12 @@ newTalent{
 		self:talentTemporaryValue(ret, "inc_damage", {[DamageType.ACID] = t.getIncrease(self, t)})
 		return ret
 	end,
-	deactivate = function(self, t, p)
+	deactivate = function(self, t, p) --luacheck: ignore 212
 		return true
 	end,
 	info = function(self, t)
 		local daminc = t.getIncrease(self, t)
-		return ([[When you throw your alchemist bombs, you infuse them with explosive acid that can disarm.
+		return ([[When you throw your alchemist bombs, you infuse them with explosive acid that has a 25%% chance to disarm for 3 turns.
 		In addition all acid damage you do is increased by %d%%.
 		You cannot have more than one alchemist infusion sustain active at once.]]):
 		format(daminc)
@@ -50,11 +49,10 @@ newTalent{
 
 newTalent{
 	name = "Caustic Cleanse", short_name = "BOMBARDIER_CAUSTIC_CLEANSE",
-	type = {"spell/bombardier-acid-alchemy", 2},
+	type = {"spell/bombardier-caustic-alchemy", 2},
 	require = spells_req2,
 	mode = "passive",
 	points = 5,
-	cooldown = 10,
 	getDuration = function(self, t) return math.floor(self:combatScale(self:combatSpellpower(0.03) * self:getTalentLevel(t), 2, 0, 10, 8)) end,
 	applyEffect = function(self, t, target)
 		local duration = t.getDuration(self, t)
@@ -64,15 +62,15 @@ newTalent{
 	end,
 	info = function(self, t)
 		local duration = t.getDuration(self, t)
-		return ([[While Acid Infusion is active, your bombs apply a caustic coating to you and allies that lasts for %d turns and will cleanse 1 detrimental physical effect.
-		The duration increases with Spellpower. You can only gain this benefit once every 10 turns.]]):
+		return ([[While Acid Infusion is active, your bombs apply a caustic coating to you and allies that lasts for %d turns and will cleanse 1 detrimental physical effect each turn.
+		The duration increases with Spellpower.]]):
 		format(duration)
 	end,
 }
 
 newTalent{
 	name = "Caustic Mire", short_name = "BOMBARDIER_CAUSTIC_MIRE",
-	type = {"spell/bombardier-acid-alchemy",3},
+	type = {"spell/bombardier-caustic-alchemy",3},
 	require = spells_req3,
 	points = 5,
 	mana = 50,
@@ -104,7 +102,7 @@ newTalent{
 		local _ _, _, _, x, y = self:canProject(tg, x, y)
 		-- Add a lasting map effect
 		game.level.map:addEffect(self,
-			x, y, t.getDuration(self, t),
+			x, y, duration,
 			DamageType.ACID_CORRODE, {dam=self:spellCrit(t.getDamage(self, t)), dur=cordur, atk=atk, armor=armor, defense=defense},
 			self:getTalentRadius(t),
 			5, nil,
@@ -120,7 +118,7 @@ newTalent{
 		local cordur = t.getCorrodeDur(self, t)
 		local duration = t.getDuration(self, t)
 		local radius = self:getTalentRadius(t)
-		return ([[A radius %d pool of acid spawns at the target location, doing %0.1f Acid damage each turn for %d turns.
+		return ([[A radius %d pool of acid spawns at the target location, doing %d Acid damage each turn for %d turns.
 		All creatures caught in the mire will be corroded by the acid, reducing their accuracy, armor, and defense for %d turns.
 		The damage will increase with your Spellpower.]]):
 		format(radius, damDesc(self, DamageType.ACID, damage), duration, cordur)
@@ -129,7 +127,7 @@ newTalent{
 
 newTalent{
 	name = "Dissolving Acid", short_name = "BOMBARDIER_DISSOLVING_ACID",
-	type = {"spell/bombardier-acid-alchemy",4},
+	type = {"spell/bombardier-caustic-alchemy",4},
 	require = spells_req4,
 	points = 5,
 	mana = 45,
@@ -163,8 +161,8 @@ newTalent{
 
 			-- Go through all mental sustains
 			for tid, act in pairs(target.sustain_talents) do
-				local t = self:getTalentFromId(tid)
-				if act and t.is_mind then
+				local tal = self:getTalentFromId(tid)
+				if act and tal.is_mind then
 					effs[#effs+1] = {"talent", tid}
 				end
 			end
@@ -189,7 +187,7 @@ newTalent{
 	end,
 	info = function(self, t)
 		local damage = t.getDamage(self, t)
-		return ([[Acid erupts all around your target, dealing %0.1f acid damage.
+		return ([[Acid erupts all around your target, dealing %d acid damage.
 		The acid attack is extremely distracting, and may remove up to %d physical or mental temporary effects or mental sustains (depending on the Spell Save of the target).
 		The damage and chance to remove effects will increase with your Spellpower.]]):format(damDesc(self, DamageType.ACID, damage), t.getRemoveCount(self, t))
 	end,

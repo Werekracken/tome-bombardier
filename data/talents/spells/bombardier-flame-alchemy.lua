@@ -16,11 +16,10 @@
 --
 -- Nicolas Casalini "DarkGod"
 -- darkgod@te4.org
-local Object = require "engine.Object"
 
 newTalent{
 	name = "Flame Infusion", short_name = "BOMBARDIER_FIRE_INFUSION",
-	type = {"spell/bombardier-fire-alchemy", 1},
+	type = {"spell/bombardier-flame-alchemy", 1},
 	mode = "sustained",
 	require = spells_req1,
 	sustain_mana = 5,
@@ -36,12 +35,12 @@ newTalent{
 		self:talentTemporaryValue(ret, "inc_damage", {[DamageType.FIRE] = t.getIncrease(self, t)})
 		return ret
 	end,
-	deactivate = function(self, t, p)
+	deactivate = function(self, t, p) --luacheck: ignore 212
 		return true
 	end,
 	info = function(self, t)
 		local daminc = t.getIncrease(self, t)
-		return ([[When you throw your alchemist bombs, you infuse them with flames that burn for a few turns and has a chance to add an additional burn that stuns as well.
+		return ([[When you throw your alchemist bombs, you infuse them with flames that burn for a few turns and has a 25%% chance to add an additional burn for 3 turns that stuns as well.
 		In addition all fire damage you do is increased by %d%%.
 		You cannot have more than one alchemist infusion sustain active at once.]]):
 		format(daminc)
@@ -50,31 +49,34 @@ newTalent{
 
 newTalent{
 	name = "Fire Power", short_name = "BOMBARDIER_FIRE_POWER",
-	type = {"spell/bombardier-fire-alchemy", 2},
+	type = {"spell/bombardier-flame-alchemy", 2},
 	require = spells_req2,
 	mode = "passive",
 	points = 5,
 	getDuration = function(self, t) return math.floor(self:combatScale(self:combatSpellpower(0.03) * self:getTalentLevel(t), 2, 0, 10, 8)) end,
-	getPower = function(self, t) return self:combatTalentScale(t, 30, 50) end,
+	getPower = function(self, t) return self:combatTalentScale(t, 10, 25) end,
+	getCrit = function(self, t) return self:combatTalentScale(t, 3, 15) end,
 	applyEffect = function(self, t, target)
 		local duration = t.getDuration(self, t)
-		local power = t.getPower(self, t)
+		local penpower = t.getPower(self, t)
+		local critpower = t.getCrit(self, t)
 		if target and self:reactionToward(target) >= 0 then
-			target:setEffect(target.EFF_BOMBARDIER_FIRE_POWER, duration, {penetration=power})
+			target:setEffect(target.EFF_BOMBARDIER_FIRE_POWER, duration, {penetration=penpower, crit=critpower})
 		end
 	end,
 	info = function(self, t)
 		local duration = t.getDuration(self, t)
 		local power = t.getPower(self, t)
-		return ([[While Flame Infusion is active, your bombs invigorate allies and yourself by increasing all damage penetration by %d%% for the next %d turns.
+		local crit = t.getCrit(self, t)
+		return ([[While Flame Infusion is active, your bombs invigorate allies and yourself by increasing all damage penetration by %d%% and increasing all critical strike chances by %d%% for the next %d turns.
 		The duration increases with Spellpower.]]):
-		format(power, duration)
+		format(power, crit, duration)
 	end,
 }
 
 newTalent{
 	name = "Fire Storm", short_name = "BOMBARDIER_FIRE_STORM",
-	type = {"spell/bombardier-fire-alchemy",3},
+	type = {"spell/bombardier-flame-alchemy",3},
 	require = spells_req3,
 	points = 5,
 	random_ego = "attack",
@@ -110,7 +112,7 @@ newTalent{
 	info = function(self, t)
 		local damage = t.getDamage(self, t)
 		local duration = t.getDuration(self, t)
-		return ([[A furious fire storm rages around the caster, doing %0.2f fire damage in a radius of 3 each turn for %d turns.
+		return ([[A furious fire storm rages around the caster, doing %d fire damage in a radius of 3 each turn for %d turns.
 		You closely control the firestorm, preventing it from harming your party members.
 		The damage and duration will increase with your Spellpower.]]):
 		format(damDesc(self, DamageType.FIRE, damage), duration)
@@ -119,7 +121,7 @@ newTalent{
 
 newTalent{
 	name = "Body of Fire", short_name = "BOMBARDIER_BODY_OF_FIRE",
-	type = {"spell/bombardier-fire-alchemy",4},
+	type = {"spell/bombardier-flame-alchemy",4},
 	require = spells_req4,
 	mode = "sustained",
 	cooldown = 40,
@@ -130,7 +132,7 @@ newTalent{
 	tactical = { ATTACKAREA = { FIRE = 1.5 },
 			SELF = {defend = 1}
 	},
-	on_pre_use_ai = function(self, t, silent, fake)
+	on_pre_use_ai = function(self, t)
 		if self.ai_state._advanced_ai then return true end -- let the advanced tactical AI decide to use
 		local is_active = self:isTalentActive(t.id)
 		local aitarget = self.ai_target.actor
@@ -183,7 +185,7 @@ newTalent{
 			res = self:addTemporaryValue("resists", {[DamageType.FIRE] = t.getResistance(self, t)}),
 		}
 	end,
-	deactivate = function(self, t, p)
+	deactivate = function(self, t, p) --luacheck: ignore 212
 		self:removeShaderAura("body_of_fire")
 		game.logSeen(self, "#FF8000#The raging fire around %s calms down and disappears.", self.name)
 		self:removeTemporaryValue("on_melee_hit", p.onhit)
@@ -194,7 +196,7 @@ newTalent{
 		local onhitdam = t.getFireDamageOnHit(self, t)
 		local insightdam = t.getFireDamageInSight(self, t)
 		local res = t.getResistance(self, t)
-		return ([[Turn your body into pure flame, increasing your fire resistance by %d%%, burning any creatures striking you in melee for %0.2f fire damage, and randomly launching up to %d slow-moving fire bolt(s) per turn at targets in sight, each dealing %0.2f fire damage.
+		return ([[Turn your body into pure flame, increasing your fire resistance by %d%%, burning any creatures striking you in melee for %d fire damage, and randomly launching up to %d slow-moving fire bolt(s) per turn at targets in sight, each dealing %d fire damage.
 		The projectiles safely go through your friends without harming them.
 		The damage and resistance will increase with your Spellpower.]]):
 		format(res,onhitdam, t.getNumber(self, t), insightdam)

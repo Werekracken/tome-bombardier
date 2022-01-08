@@ -6,7 +6,7 @@ newTalent{
 	mana = 5,
 	cooldown = 4,
 	range = function(self, t) return math.floor(self:combatTalentScale(t, 5, 9, 0.5, 0, 0, true)) end,
-	radius = function(self, t) return self:callTalent(self.T_BOMBARDIER_EXPLOSION_EXPERT, "getRadius") end,
+	radius = function(self) return self:callTalent(self.T_BOMBARDIER_EXPLOSION_EXPERT, "getRadius") end,
 	direct_hit = true,
 	requires_target = true,
 	target = function(self, t)
@@ -14,7 +14,7 @@ newTalent{
 		if not ammo then return end
 		return {type="ball", range=self:getTalentRange(t)+(ammo and ammo.alchemist_bomb and ammo.alchemist_bomb.range or 0), radius=self:getTalentRadius(t), talent=t}
 	end,
-	tactical = { ATTACKAREA = function(self, t, target)
+	tactical = { ATTACKAREA = function(self)
 		if self:isTalentActive(self.T_BOMBARDIER_ACID_INFUSION) then return { ACID = 2 }
 		elseif self:isTalentActive(self.T_BOMBARDIER_LIGHTNING_INFUSION) then return { LIGHTNING = 2 }
 		elseif self:isTalentActive(self.T_BOMBARDIER_FROST_INFUSION) then return { COLD = 2 }
@@ -32,8 +32,7 @@ newTalent{
 		elseif self:isTalentActive(self.T_BOMBARDIER_FIRE_INFUSION) then damtype = DamageType.FIRE_STUN; particle = "fireflash"
 		end
 		inc_dam = inc_dam + (ammo.alchemist_bomb and ammo.alchemist_bomb.power or 0) / 100
-		--local dam = self:combatTalentSpellDamage(t, 15, 150, ((ammo.alchemist_power or 0) + self:combatSpellpower()) / 2)
-		local dam = self:combatTalentSpellDamage(t, 20, 200, ((ammo.alchemist_power or 0) + self:combatSpellpower()) / 2)
+		local dam = self:combatTalentSpellDamage(t, 15, 150, ((ammo.alchemist_power or 0) + self:combatSpellpower()) / 2)
 		dam = dam * (1 + inc_dam)
 		return dam, damtype, particle
 	end,
@@ -62,7 +61,7 @@ newTalent{
 		-- Compare theorical AOE zone with actual zone and adjust damage accordingly
 		if self:knowTalent(self.T_BOMBARDIER_EXPLOSION_EXPERT) then
 			local nb = 0
-			local grids = self:project(tg, x, y, function(tx, ty) end)
+			local grids = self:project(tg, x, y, function(tx, ty) end) --luacheck: ignore 212
 			if grids then for px, ys in pairs(grids or {}) do for py, _ in pairs(ys) do nb = nb + 1 end end end
 			if nb > 0 then
 				dam = dam + dam * self:callTalent(self.T_BOMBARDIER_EXPLOSION_EXPERT, "minmax", nb)
@@ -70,9 +69,8 @@ newTalent{
 		end
 
 		local tmp = {}
-		local duration = t.getDuration(self, t)
 		local grids = self:project(tg, x, y, function(tx, ty)
-			local d = dam
+			local d
 			local target = game.level.map(tx, ty, Map.ACTOR)
 			if tx == self.x and ty == self.y then -- Protect yourself
 				d = dam * (1 - prot)
@@ -132,8 +130,8 @@ newTalent{
 		local dam, damtype = 1, DamageType.FIRE
 		if ammo then dam, damtype = t.computeDamage(self, t, ammo) end
 		dam = damDesc(self, damtype, dam)
-		return ([[Imbue an alchemist gem with an explosive charge of mana and throw it. You magically control the explosion so that it doesn't affect you or your allies.
-		Without an alchemist infusion altering it, the gem will explode for %0.1f %s physical damage to enemies.
+		return ([[Imbue an alchemist gem with an explosive charge of mana and throw it. Your fine control of the explosion makes it so that it doesn't affect you or your allies.
+		The gem will explode for %d %s to enemies.
 		Each kind of gem will also provide a specific effect.
 		The damage will improve with better gems and with your Spellpower.]]):format(dam, DamageType:get(damtype).name)
 	end,
@@ -145,7 +143,7 @@ newTalent{
 	require = spells_req2,
 	mode = "passive",
 	points = 5,
-	getPower = function(self, t) return self:combatTalentSpellDamage(t, 10, 40) end,
+	getPower = function(self, t) return self:combatTalentSpellDamage(t, 5, 40) end,
 	applyEffect = function(self, t, target)
 		if target then
 			target:setEffect(target.EFF_INTIMIDATED, 1, {apply_power = self:combatSpellpower(), power = t.getPower(self, t)})
@@ -174,10 +172,8 @@ newTalent{
 			print("Adjusting explosion damage to account for ", lostgrids, " lost tiles => ", mult * 100)
 			return mult
 		else
-			local min = 1
-			local min = (math.log10(min) / (6 - math.min(self:getTalentLevelRaw(t), 5)))
-			local max = theoretical_nb
-			local max = (math.log10(max) / (6 - math.min(self:getTalentLevelRaw(t), 5)))
+			local min = (math.log10(1) / (6 - math.min(self:getTalentLevelRaw(t), 5)))
+			local max = (math.log10(theoretical_nb) / (6 - math.min(self:getTalentLevelRaw(t), 5)))
 			return min, max
 		end
 	end,
@@ -207,10 +203,9 @@ newTalent{
 	end,
 	tactical = { ATTACKAREA = { PHYSICAL = 2 }, DISABLE = { knockback = 2 } },
 	computeDamage = function(self, t, ammo)
-		local inc_dam = 0
 		local damtype = DamageType.SPELLKNOCKBACK
 		local particle = "ball_physical"
-		inc_dam = (ammo.alchemist_bomb and ammo.alchemist_bomb.power or 0) / 100
+		local inc_dam = (ammo.alchemist_bomb and ammo.alchemist_bomb.power or 0) / 100
 		local dam = self:combatTalentSpellDamage(t, 15, 120, ((ammo.alchemist_power or 0) + self:combatSpellpower()) / 2)
 		dam = dam * (1 + inc_dam)
 		return dam, damtype, particle
@@ -270,11 +265,11 @@ newTalent{
 	end,
 	info = function(self, t)
 		local ammo = self:hasAlchemistWeapon()
-		local dam, damtype = 1
+		local dam
 		if ammo then dam = t.computeDamage(self, t, ammo) end
 		dam = damDesc(self, DamageType.PHYSICAL, dam)
 		return ([[Crush together two alchemist gems, making them extremely unstable.
-		You then throw them to a target area, where they explode on impact, dealing %0.2f physical damage and knocking back any creatures in the blast radius.
+		You then throw them to a target area, where they explode on impact, dealing %d physical damage and knocking back any creatures in the blast radius.
 		Each kind of gem will also provide a specific effect.
 		The damage will improve with better gems and with your Spellpower.]]):format(dam)
 	end,

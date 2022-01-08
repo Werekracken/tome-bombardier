@@ -16,11 +16,10 @@
 --
 -- Nicolas Casalini "DarkGod"
 -- darkgod@te4.org
-local Object = require "engine.Object"
 
 newTalent{
 	name = "Frost Infusion", short_name = "BOMBARDIER_FROST_INFUSION",
-	type = {"spell/bombardier-frost-alchemy", 1},
+	type = {"spell/bombardier-ice-alchemy", 1},
 	mode = "sustained",
 	require = spells_req1,
 	sustain_mana = 5,
@@ -36,12 +35,12 @@ newTalent{
 		self:talentTemporaryValue(ret, "inc_damage", {[DamageType.COLD] = t.getIncrease(self, t)})
 		return ret
 	end,
-	deactivate = function(self, t, p)
+	deactivate = function(self, t, p) --luacheck: ignore 212
 		return true
 	end,
 	info = function(self, t)
 		local daminc = t.getIncrease(self, t)
-		return ([[When you throw your alchemist bombs, you infuse them with cold damage that slows and has a chance to freeze your foes.
+		return ([[When you throw your alchemist bombs, you infuse them with cold damage that slows by 20%% for 3 turns and has a 25%% chance to freeze your foes.
 		In addition all cold damage you do is increased by %d%%.
 		You cannot have more than one alchemist infusion sustain active at once.]]):
 		format(daminc)
@@ -50,13 +49,13 @@ newTalent{
 
 newTalent{
 	name = "Ice Armour", short_name = "BOMBARDIER_ICE_ARMOUR",
-	type = {"spell/bombardier-frost-alchemy", 2},
+	type = {"spell/bombardier-ice-alchemy", 2},
 	require = spells_req2,
 	mode = "passive",
 	points = 5,
 	getDuration = function(self, t) return math.floor(self:combatScale(self:combatSpellpower(0.03) * self:getTalentLevel(t), 2, 0, 10, 8)) end,
-	getArmor = function(self, t) return self:combatTalentSpellDamage(t, 10, 45) end,
-	getDamage = function(self, t) return self:combatTalentSpellDamage(t, 5, 70) end,
+	getArmor = function(self, t) return self:combatTalentSpellDamage(t, 5, 20) end,
+	getDamage = function(self, t) return self:combatTalentSpellDamage(t, 5, 50) end,
 	applyEffect = function(self, t, target)
 		local duration = t.getDuration(self, t)
 		local dam = t.getDamage(self, t)
@@ -70,7 +69,7 @@ newTalent{
 		local dam = self and self:damDesc(engine.DamageType.COLD, t.getDamage(self, t)) or 0
 		local armor = t.getArmor(self, t)
 		return ([[While Frost Infusion is active, your bombs deposit a layer of ice on yourself and allies for %d turns.
-		This ice provides %d additional armour, %0.1f Cold damage retaliation against melee attacks, and 50%% of damage is converted to Cold.
+		This ice provides %d additional armour, %d Cold damage retaliation against melee attacks, and 50%% of damage is converted to Cold.
 		The duration increases with your talent level and Spellpower, and the armor and retaliation with Spellpower.]]):
 		format(duration, armor, dam)
 	end,
@@ -78,7 +77,7 @@ newTalent{
 
 newTalent{
 	name = "Flash Freeze", short_name = "BOMBARDIER_FLASH_FREEZE",
-	type = {"spell/bombardier-frost-alchemy",3},
+	type = {"spell/bombardier-ice-alchemy",3},
 	require = spells_req3,
 	points = 5,
 	mana = 30,
@@ -95,14 +94,14 @@ newTalent{
 	end,
 	action = function(self, t)
 		local tg = self:getTalentTarget(t)
-		local grids = self:project(tg, self.x, self.y, DamageType.COLDNEVERMOVE, {dur=t.getDuration(self, t), dam=t.getDamage(self, t)})
+		--local grids = self:project(tg, self.x, self.y, DamageType.COLDNEVERMOVE, {dur=t.getDuration(self, t), dam=t.getDamage(self, t)})
 		game.level.map:particleEmitter(self.x, self.y, tg.radius, "ball_ice", {radius=tg.radius})
 		game:playSoundNear(self, "talents/ice")
 		return true
 	end,
 	info = function(self, t)
 		local radius = self:getTalentRadius(t)
-		return ([[Invoke a blast of cold all around you with a radius of %d, doing %0.1f Cold damage and freezing creatures to the ground for %d turns.
+		return ([[Invoke a blast of cold all around you with a radius of %d, doing %d Cold damage and freezing creatures to the ground for %d turns.
 		Affected creatures can still act, but cannot move.
 		The duration will increase with your Spellpower.]]):format(radius, damDesc(self, DamageType.COLD, t.getDamage(self, t)), t.getDuration(self, t))
 	end,
@@ -110,7 +109,7 @@ newTalent{
 
 newTalent{
 	name = "Ice Core", short_name = "BOMBARDIER_BODY_OF_ICE",
-	type = {"spell/bombardier-frost-alchemy",4},
+	type = {"spell/bombardier-ice-alchemy",4},
 	require = spells_req4,
 	mode = "sustained",
 	cooldown = 40,
@@ -131,7 +130,7 @@ newTalent{
 		self:talentTemporaryValue(ret, "ignore_direct_crits", t.critResist(self, t))
 		return ret
 	end,
-	deactivate = function(self, t, p)
+	deactivate = function(self, t, p) --luacheck: ignore 212
 		self:removeParticles(p.particle)
 		self:removeShaderAura("body_of_ice")
 		return true

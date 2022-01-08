@@ -16,11 +16,10 @@
 --
 -- Nicolas Casalini "DarkGod"
 -- darkgod@te4.org
-local Object = require "engine.Object"
 
 newTalent{
 	name = "Lightning Infusion", short_name = "BOMBARDIER_LIGHTNING_INFUSION",
-	type = {"spell/bombardier-energy-alchemy", 1},
+	type = {"spell/bombardier-lightning-alchemy", 1},
 	mode = "sustained",
 	require = spells_req_high1,
 	sustain_mana = 5,
@@ -36,12 +35,12 @@ newTalent{
 		self:talentTemporaryValue(ret, "inc_damage", {[DamageType.LIGHTNING] = t.getIncrease(self, t)})
 		return ret
 	end,
-	deactivate = function(self, t, p)
+	deactivate = function(self, t, p) --luacheck: ignore 212
 		return true
 	end,
 	info = function(self, t)
 		local daminc = t.getIncrease(self, t)
-		return ([[When you throw your alchemist bombs, you infuse them with lightning damage that can daze your foes.
+		return ([[When you throw your alchemist bombs, you infuse them with lightning damage that has a 25%% to daze your foes for 3 turns.
 		In addition all lightning damage you do is increased by %d%%.
 		You cannot have more than one alchemist infusion sustain active at once.]]):
 		format(daminc)
@@ -50,32 +49,32 @@ newTalent{
 
 newTalent{
 	name = "Dynamic Recharge", short_name = "BOMBARDIER_DYNAMIC_RECHARGE",
-	type = {"spell/bombardier-energy-alchemy", 2},
+	type = {"spell/bombardier-lightning-alchemy", 2},
 	require = spells_req_high2,
 	mode = "passive",
 	points = 5,
-	cooldown = 10,
+	getChance = function(self, t) return math.floor(self:combatTalentLimit(t, 100, 15, 50)) end,
 	getDuration = function(self, t) return math.floor(self:combatScale(self:combatSpellpower(0.03) * self:getTalentLevel(t), 2, 0, 10, 8)) end,
-	getAbsorb = function(self, t) return self:combatTalentSpellDamage(t, 30, 370) end,
 	applyEffect = function(self, t, target)
 		local duration = t.getDuration(self, t)
-		local power = t.getAbsorb(self, t)
+		local chance = t.getChance(self, t)
 		if target and self:reactionToward(target) >= 0 then
-			target:setEffect(target.EFF_DAMAGE_SHIELD, duration or 5, {power=power, reflect=100})
+			target:setEffect(target.EFF_BOMBARDIER_DYNAMIC_RECHARGE, duration, {chance=chance})
 		end
 	end,
 	info = function(self, t)
 		local duration = t.getDuration(self, t)
-		local power = t.getAbsorb(self, t)
-		return ([[While Lightning Infusion is active, your bombs apply a temporary shield to protect yourself and any allies by reflecting up to %d damage for %d turns.
-		This can only happen once every 10 turns. The duration increases with your Spellpower and talent level, the effects increase with your Spellpower.]]):
-		format(power, duration or 1)
+		local chance = t.getChance(self, t)
+		return ([[While Lightning Infusion is active, your bombs energize you and allies for %d turns.
+		While energized, all talents on cooldown have %d%% chance to be reduced by 1.
+		The duration increases with your talent level and Spellpower, and the chance with talent level.]]):
+		tformat(duration, chance)
 	end,
 }
 
 newTalent{
 	name = "Thunderclap", short_name = "BOMBARDIER_THUNDERCLAP",
-	type = {"spell/bombardier-energy-alchemy",3},
+	type = {"spell/bombardier-lightning-alchemy",3},
 	require = spells_req_high3,
 	points = 5,
 	mana = 40,
@@ -115,11 +114,11 @@ newTalent{
 			if actor:canBe("disarm") then
 				actor:setEffect(actor.EFF_DAZED, t.getDuration(self, t), {apply_power=self:combatSpellpower()})
 
- 			end
- 			if actor:canBe("knockback") then
-  				actor:knockback(self.x, self.y, 3)
-  				actor:crossTierEffect(actor.EFF_OFFBALANCE, self:combatSpellpower())
-  			end
+			end
+			if actor:canBe("knockback") then
+				actor:knockback(self.x, self.y, 3)
+				actor:crossTierEffect(actor.EFF_OFFBALANCE, self:combatSpellpower())
+			end
 		end, dam)
 		game.level.map:particleEmitter(self.x, self.y, tg.radius, "gravity_breath", {radius=tg.radius, tx=x-self.x, ty=y-self.y, allow=core.shader.allow("distort")})
 		game:playSoundNear(self, "talents/lightning")
@@ -127,7 +126,7 @@ newTalent{
 	end,
 	info = function(self, t)
 		local radius = self:getTalentRadius(t)
-		return ([[By crushing an alchemist gem you generate a thunderclap in a cone of radius %d dealing %0.2f physical damage and %0.2f lightning damage.
+		return ([[By crushing an alchemist gem you generate a thunderclap in a cone of radius %d dealing %d physical damage and %d lightning damage.
 		All creatures caught inside are knocked back and dazed for %d turns.
 		The duration and damage will increase with your Spellpower.]]):format(radius, damDesc(self, DamageType.PHYSICAL, t.getDamage(self, t)), damDesc(self, DamageType.LIGHTNING, t.getDamage(self, t)), t.getDuration(self, t))
 	end,
@@ -135,7 +134,7 @@ newTalent{
 
 newTalent{
 	name = "Living Lightning", short_name = "BOMBARDIER_LIVING_LIGHTNING",
-	type = {"spell/bombardier-energy-alchemy",4},
+	type = {"spell/bombardier-lightning-alchemy",4},
 	require = spells_req_high4,
 	mode = "sustained",
 	cooldown = 40,
@@ -193,7 +192,7 @@ newTalent{
 
 		return ret
 	end,
-	deactivate = function(self, t, p)
+	deactivate = function(self, t, p) --luacheck: ignore 212
 		self:removeParticles(p.particle)
 		return true
 	end,
@@ -203,10 +202,10 @@ newTalent{
 		local turn = t.getTurn(self, t)
 		local range = self:getTalentRange(t)
 		return ([[Infuse your body with lightning energy, bolstering your movement speed by +%d%%.
-		Each turn, a foe within range %d will be struck by lightning and be dealt %0.1f Lightning damage.
+		Each turn, a foe within range %d will be struck by lightning and be dealt %d Lightning damage.
 		In addition, damage to your health will energize you.
 		At the start of each turn in which you have lost at least %d life (20%% of your maximum life) since your last turn, you will gain %d%% of a turn.
 		The effects increase with your Spellpower.]]):
-		format(speed, range, damDesc(self, DamageType.LIGHTNING, t.getDamage(self, t)), self.max_life * 0.2, turn)
+		format(speed, range, damDesc(self, DamageType.LIGHTNING, dam), self.max_life * 0.2, turn)
 	end,
 }
