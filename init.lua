@@ -2,7 +2,7 @@ long_name = "Class: Bombardier"
 short_name = "bombardier"
 for_module = "tome"
 version = {1,7,4}
-addon_version = {1,0,0}
+addon_version = {1,0,1}
 weight = 2000
 author = {"werekracken"}
 tags = {"bombardier", "Bombardier", "alchemist", "Alchemist", "class", "Class"}
@@ -43,9 +43,8 @@ Class talents
 
 ## Changelog
 
-v1.0.0
-Initial release
-
+- v1.0.0 Initial release.
+- v1.0.1 Fix Flash Freeze.
 ]]
 overload = true
 superload = false
